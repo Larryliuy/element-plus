@@ -1,6 +1,7 @@
 import { computed, inject, isRef, ref, unref } from 'vue'
 import { get } from 'lodash-unified'
-import English from '@element-plus/locale/lang/en'
+// import English from '@element-plus/locale/lang/en'
+import Chanese from '@element-plus/locale/lang/zh-cn'
 
 import type { MaybeRef } from '@vueuse/core'
 import type { InjectionKey, Ref } from 'vue'
@@ -46,5 +47,5 @@ export const localeContextKey: InjectionKey<Ref<Language | undefined>> =
 
 export const useLocale = () => {
   const locale = inject(localeContextKey, ref())!
-  return buildLocaleContext(computed(() => locale.value || English))
+  return buildLocaleContext(computed(() => locale.value || Chanese))
 }

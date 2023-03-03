@@ -60,7 +60,10 @@
           v-show="currentView !== 'time'"
           :class="[
             dpNs.e('header'),
-            (currentView === 'year' || currentView === 'month') &&
+            (currentView === 'year' ||
+              currentView === 'halfyear' ||
+              currentView === 'season' ||
+              currentView === 'month') &&
               dpNs.e('header--bordered'),
           ]"
         >
@@ -148,6 +151,22 @@
             :parsed-value="parsedValue"
             @pick="handleYearPick"
           />
+          <half-year-table
+            v-if="currentView === 'halfyear'"
+            ref="currentViewRef"
+            :date="innerDate"
+            :parsed-value="parsedValue"
+            :disabled-date="disabledDate"
+            @pick="handleHalfyearPick"
+          />
+          <season-table
+            v-if="currentView === 'season'"
+            ref="currentViewRef"
+            :date="innerDate"
+            :parsed-value="parsedValue"
+            :disabled-date="disabledDate"
+            @pick="handleSeasonPick"
+          />
           <month-table
             v-if="currentView === 'month'"
             ref="currentViewRef"
@@ -218,6 +237,8 @@ import { TOOLTIP_INJECTION_KEY } from '@element-plus/tokens'
 import { panelDatePickProps } from '../props/panel-date-pick'
 import DateTable from './basic-date-table.vue'
 import MonthTable from './basic-month-table.vue'
+import SeasonTable from './basic-season-table.vue'
+import HalfYearTable from './basic-halfyear-table.vue'
 import YearTable from './basic-year-table.vue'
 
 import type { SetupContext } from 'vue'
@@ -341,7 +362,6 @@ const moveByYear = (forward: boolean) => {
 }
 
 const currentView = ref('date')
-
 const yearLabel = computed(() => {
   const yearTranslation = t('el.datepicker.year')
   if (currentView.value === 'year') {
@@ -380,7 +400,8 @@ const handleShortcutClick = (shortcut: Shortcut) => {
 
 const selectionMode = computed<DatePickType>(() => {
   const { type } = props
-  if (['week', 'month', 'year', 'dates'].includes(type)) return type
+  if (['week', 'month', 'season', 'halfyear', 'year', 'dates'].includes(type))
+    return type
   return 'date' as DatePickType
 })
 
@@ -405,6 +426,36 @@ const handleMonthPick = async (month: number) => {
     }
   }
   handlePanelChange('month')
+}
+const handleSeasonPick = async (season: number) => {
+  console.log(season, 'season')
+  innerDate.value = innerDate.value.startOf('month').month(season)
+  console.log(innerDate.value, 'innerDate.value')
+  if (selectionMode.value === 'season') {
+    emit(innerDate.value, false)
+  } else {
+    currentView.value = 'date'
+    if (['month', 'year', 'date', 'week'].includes(selectionMode.value)) {
+      emit(innerDate.value, true)
+      await nextTick()
+      handleFocusPicker()
+    }
+  }
+  handlePanelChange('season')
+}
+const handleHalfyearPick = async (halfyear: number) => {
+  innerDate.value = innerDate.value.startOf('month').month(halfyear)
+  if (selectionMode.value === 'halfyear') {
+    emit(innerDate.value, false)
+  } else {
+    currentView.value = 'date'
+    if (['month', 'year', 'date', 'week'].includes(selectionMode.value)) {
+      emit(innerDate.value, true)
+      await nextTick()
+      handleFocusPicker()
+    }
+  }
+  handlePanelChange('halfyear')
 }
 
 const handleYearPick = async (year: number) => {
@@ -692,14 +743,14 @@ const handleKeyControl = (code: string) => {
   }
 }
 
-const handlePanelChange = (mode: 'month' | 'year') => {
+const handlePanelChange = (mode: 'month' | 'season' | 'halfyear' | 'year') => {
   contextEmit('panel-change', innerDate.value.toDate(), mode, currentView.value)
 }
 
 watch(
   () => selectionMode.value,
   (val) => {
-    if (['month', 'year'].includes(val)) {
+    if (['month', 'season', 'halfyear', 'year'].includes(val)) {
       currentView.value = val
       return
     }

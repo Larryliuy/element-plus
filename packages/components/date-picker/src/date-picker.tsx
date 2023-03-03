@@ -74,7 +74,7 @@ export default defineComponent({
         (DEFAULT_FORMATS_DATEPICKER[props.type] || DEFAULT_FORMATS_DATE)
 
       const Component = getPanel(props.type)
-
+      console.log(props, 'props')
       return (
         <CommonPicker
           {...props}
